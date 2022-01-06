@@ -1,0 +1,7 @@
+# --------------------------------------------------------
+# YAML CONFIG FILE FOR GLOBAL PATHS
+# --------------------------------------------------------
+PACS_DL_PATH: '/data/dicom/raw/'
+CSV_PATH: '/data/dicom/csvs/'
+ACC_CSV_PATH: '/data/dicom/accessions/'
+EXPORT_PATH: ''
