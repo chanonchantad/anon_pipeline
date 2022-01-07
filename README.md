@@ -22,7 +22,6 @@ anonymization command-line interface
 COMMANDS:
 
   standard  - Launch regular anonymization pipeline using standard rules.\
-  accession - Launch accession anonymization pipeline using manual accession input.
 
 ## STEPS:
 
@@ -32,14 +31,14 @@ anonymization_standard.py contains the entire pipeline and calls out these diffe
 
 2) **download.py / download_acc.py** - will query the PACS database based on the csv defined in query.csv and generate matches, missing and exclude.
 
-3) **find_discrepancy.py** - creates discrepancy.csv to show which rows in query.csv were not found in PACS. IGNORED if using query by accession flag.
+3) **find_discrepancy.py** - creates discrepancy.csv to show which rows in query.csv were not found in PACS.
 
-4) **pacs_tools.py** - has dependencies to **pacs.py** and **pacs_client.py**. begins the dicom download process from pacs.
+4) **pacs_tools.py** - has dependencies to **pacs.py** and **pacs_client.py**. begins the dicom download process from pacs (Written by Dr. Peter Chang).
 
 5) **countv2.sh** - keeps track of the dicoms downloading from pacs and assumes download is done once a certain amount of time passes.
 
 6) **sorter_anonymizer.py** - sorts the folders into accession-named folders within ~/mirc/flat and then quarantines all dicom files based on the rules defined in this file in ~/mirc/sorted. Sends files to ~/mirc/anon 
 
-7) **anonymize_dicoms.py** - has dependencies to hash.py and files within "rules". anonymizes all dicoms within ~/mirc/anon based on the rules provided in the .csv file.
+7) **anonymize_dicoms.py** - has dependencies to hash.py and files within "rules". anonymizes all dicoms within ~/mirc/anon based on the list of DICOM tags to remove in the specified .csv file.
 
 8) **post_process.py** - secondary processing to scrub pixel_array and remove burnt in PHI. Uses the rules specified in da-pixel.yml
