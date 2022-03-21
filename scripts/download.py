@@ -1,6 +1,8 @@
 import pandas as pd
 import pacs, pacs_client
 
+# --- sets which PACS server to query from
+CONFIGS = 'vis'
 class Client(pacs_client.Client):
 
     def parse_csv(self, fname):
@@ -138,7 +140,7 @@ class Client(pacs_client.Client):
 def main(root='.',argv = None):
     import sys 
     suffix = sys.argv[1] if len(sys.argv) > 1 else  ""
-    client = Client(root=root)
+    client = Client(root=root, configs=CONFIGS)
     client.perform_find(suffix=suffix)
  
 if __name__ == '__main__':

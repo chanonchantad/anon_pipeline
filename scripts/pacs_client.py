@@ -8,11 +8,11 @@ import pacs
 
 class Client():
 
-    def __init__(self, root, configs='exx'):
+    def __init__(self, root, configs='vm1'):
 
         self.root = root
 
-        assert configs in ['exx', 'mac', 'fs1', 'vm1']
+        assert configs in ['exx', 'mac', 'fs1', 'vm1', 'vis']
 
         if configs == 'exx':
             self.configs = pacs.configs_exx
@@ -25,6 +25,9 @@ class Client():
 
         if configs == 'vm1':
             self.configs = pacs.configs_vm1
+
+        if configs == 'vis':
+            self.configs = pacs.configs_vis
 
     def perform_find(self, suffix=''):
         """

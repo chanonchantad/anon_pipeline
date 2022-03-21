@@ -117,7 +117,7 @@ def perform_find(configs, query={}, verbose=[], max_results=20, csv_file=None, r
     
     # --- Perform query
     if len(verbose) > 0: print('Performing C-FIND...')
-    cnf.CFind(configs['ip'], configs['port_called'], theQuery, ret, configs['aet_called'], configs['aet_calling'])
+    cnf.CFind(configs['ip'], configs['port_called'], theQuery, ret, configs['aet_calling'], configs['aet_called'])
 
     # --- Save/print output
     if len(verbose) > 0: print('A total of %i matches found' % len(ret))
@@ -183,7 +183,7 @@ def perform_move(configs, query={}, verbose=False):
     # --- Perform move
     if verbose: print('Performing C-MOVE...')
     cnf.CMove(configs['ip'], configs['port_called'], theQuery, configs['port_calling'],\
-        configs['aet_called'], configs['aet_calling'], configs['destination'])
+        configs['aet_calling'], configs['aet_called'], configs['destination'])
     if verbose: print('Operation complete')
 
 # =========================================================================
@@ -247,6 +247,15 @@ configs_fs1 = {
     'port_calling': 11112,
     'aet_called': 'CAIDM_F01',
     'aet_calling': 'CAIDM_F01',
+    'destination': '/data/dicom/raw'
+}
+
+configs_vis = {
+    'ip': '160.87.136.67',
+    'port_called': 104,
+    'port_calling': 11112,
+    'aet_called': 'AWS_QUERY',
+    'aet_calling': 'CAIDM_F02',
     'destination': '/data/dicom/raw'
 }
 

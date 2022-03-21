@@ -10,6 +10,9 @@ import argparse, glob
 import pacs_client
 import sys
 
+# --- sets which PACS server to download from
+CONFIGS='vis'
+
 def count_lines(fname):
 
     with open(fname) as f:
@@ -32,7 +35,7 @@ def main(root, mode='download'):
         suffix = suffix.replace('matches_', '')
 
         # --- Create client
-        client = pacs_client.Client(root=root, configs='vm1')
+        client = pacs_client.Client(root=root, configs=CONFIGS)
 
         # --- Run
         if mode == 'download':
