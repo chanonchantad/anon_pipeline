@@ -59,8 +59,8 @@ def anonymize_dcm(dcm_path, rules):
     dcm_modality = dcm['Modality'].value
     dcm_image_type = dcm['ImageType'].value
 
-    if 'SECONDARY' in str(dcm_image_type):
-#    if 'SECONDARY' in str(dcm_image_type) or 'DERIVED' in str(dcm_image_type):
+#    if 'SECONDARY' in str(dcm_image_type):
+    if 'SECONDARY' in str(dcm_image_type) or 'DERIVED' in str(dcm_image_type):
         if dcm_modality in rules.keys():
             rules = rules[dcm_modality] + rules['OTHER']
         else:

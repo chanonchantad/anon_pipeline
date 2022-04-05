@@ -2,7 +2,7 @@ import pandas as pd
 import pacs, pacs_client
 import sys
 import os, glob
-
+CONFIGS = 'vis'
 class Client(pacs_client.Client):
 
     def parse_csv(self, fname):
@@ -42,7 +42,7 @@ class Client(pacs_client.Client):
    
 def main(root='.', argv = None):
     suffix = sys.argv[1] if len(sys.argv) > 1 else  ""
-    client = Client(root=root)
+    client = Client(root=root, configs=CONFIGS)
     client.perform_find(suffix=suffix)
  
 if __name__ == '__main__':
@@ -57,6 +57,6 @@ if __name__ == '__main__':
             raise ValueError("Invalid folder path. Doesn't exist.")
         else:
             root = os.path.normpath(folder_path)
-            main(root=root)
+            main(root=root, configs=CONFIGS)
     else:
         raise ValueError("Usage: python download_acc.py <suffix of csv query file> <path_to_folder \"/<date>/name/\" that contains query_<date>.csv")
