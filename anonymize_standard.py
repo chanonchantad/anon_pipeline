@@ -40,7 +40,9 @@ flag_synonyms = {
     '-raw'   : 'r',
     '-nosort': 'n',
     '-privonly' : 'p',
-    '-shift' : 's'
+    '-shift' : 's',
+    '-custom': 'c',
+    '-killdl': 'k'
 }
 
 flag_rules = {
@@ -50,7 +52,9 @@ flag_rules = {
     'r' : 'RAW',
     'n': 'NOSORT',
     'p': 'PRIVONLY',
-    's': 'SHIFT'
+    's': 'SHIFT',
+    'c': 'CUSTOM',
+    'k': 'KILL_DOWNLOAD'
 }
 
 flag_vars = {
@@ -60,7 +64,9 @@ flag_vars = {
     'RAW' : False,
     'NOSORT' : False,
     'PRIVONLY': False,
-    'SHIFT': False
+    'SHIFT': False,
+    'CUSTOM': False,
+    'KILL_DOWNLOAD': False
 }
 
 # --- check if any flags are given
@@ -103,34 +109,36 @@ cleandirs.clean(ANON_ROOT_PATH + '/flat')
 # --- perform pacs query and generate matches, exclude, missing csv files
 requestor_path = CSV_PATH + DATE + '/' + REQUESTOR
 
-# --- choose which download.py file to use based on flags
-if flag_vars['ACCESSION']:
-    download_acc.main(root=requestor_path)
-else:
-    download.main(root=requestor_path)
+if not flag_vars['KILL_DOWNLOAD']:
 
-# --- copy files to workstation if MOUNT is activated. Mounted path specific
-if flag_vars['MOUNT']:
-    subprocess.run('rm -rf /data/dicom/mirc_csvs/*', shell=True)
-    subprocess.run('cp -r ' + requestor_path + '/csvs/* /data/dicom/mirc_csvs/', shell=True)
-    subprocess.run('chmod 666 /data/dicom/mirc_csvs/*', shell=True)
+    # --- choose which download.py file to use based on flags
+    if flag_vars['ACCESSION']:
+        download_acc.main(root=requestor_path)
+    else:
+        download.main(root=requestor_path)
 
-# --- create discrepancy.csv to show rows not found from standard query. IGNORE for accession based query
-if not flag_vars['ACCESSION']:
-    find_discrepancy.find_discrepancy(REQUESTOR, DATE, CSV_PATH)
+    # --- copy files to workstation if MOUNT is activated. Mounted path specific
+    if flag_vars['MOUNT']:
+        subprocess.run('rm -rf /data/dicom/mirc_csvs/*', shell=True)
+        subprocess.run('cp -r ' + requestor_path + '/csvs/* /data/dicom/mirc_csvs/', shell=True)
+        subprocess.run('chmod 666 /data/dicom/mirc_csvs/*', shell=True)
 
-# --- allow user to check and confirm csvs generated
-user_input = input("Please review generated matches csv file. Continue to download? Y/N: ")
-if user_input != 'Y':
-    sys.exit("Terminating current anonymization pipeline request.")
+    # --- create discrepancy.csv to show rows not found from standard query. IGNORE for accession based query
+    if not flag_vars['ACCESSION']:
+        find_discrepancy.find_discrepancy(REQUESTOR, DATE, CSV_PATH)
 
-if flag_vars['MOUNT']:
-    subprocess.run('cp -r /data/dicom/mirc_csvs/* ' + requestor_path + '/csvs/', shell=True)
-    subprocess.run('rm -rf /data/dicom/mirc_csvs/*', shell=True)
+    # --- allow user to check and confirm csvs generated
+    user_input = input("Please review generated matches csv file. Continue to download? Y/N: ")
+    if user_input != 'Y':
+        sys.exit("Terminating current anonymization pipeline request.")
 
-# --- begin download from pacs. continue pipeline when download is finished (tracked by countv2.sh)
-pacs_tools.main(requestor_path)
-subprocess.run([ANON_ROOT_PATH + '/scripts/countv2.sh', PACS_DL_PATH, 'downloaded'])
+    if flag_vars['MOUNT']:
+        subprocess.run('cp -r /data/dicom/mirc_csvs/* ' + requestor_path + '/csvs/', shell=True)
+        subprocess.run('rm -rf /data/dicom/mirc_csvs/*', shell=True)
+
+    # --- begin download from pacs. continue pipeline when download is finished (tracked by countv2.sh)
+    pacs_tools.main(requestor_path)
+    subprocess.run([ANON_ROOT_PATH + '/scripts/countv2.sh', PACS_DL_PATH, 'downloaded'])
 
 # --- determine if secondaries and foreign files will be removed with "no sort" flag
 if not flag_vars['NOSORT']:
@@ -145,36 +153,54 @@ else:
     subprocess.run('mv ' + PACS_DL_PATH + '* ' + ANON_ROOT_PATH + '/mirc/anon/', shell=True)
 
 if not flag_vars['NOSORT']:
-    try:
-        # --- find request pids (for sorting folders) and modalities containing secondaries (for post processing)
-        pid_dict, scrub_dict = find_pid_modality.create_pid_2nd_scrub_dicts(DATE, REQUESTOR, CSV_PATH, ANON_ROOT_PATH)
 
+    # --- find request pids (for sorting folders) and modalities containing secondaries (for post processing)
+    pid_dict, scrub_dict = find_pid_modality.create_pid_2nd_scrub_dicts(DATE, REQUESTOR, CSV_PATH, ANON_ROOT_PATH)
+    
+    try:
         # --- post process secondaries if request contains modalities with secondary images
         if not flag_vars['RAW']:
             
-            if bool(scrub_dict):
-                rules = post_process.prepare_yaml(ANON_ROOT_PATH + '/rules/da-pixel.yml')
-                post_process.anonymize_all(scrub_dict, rules)
+            rules = post_process.prepare_yaml(ANON_ROOT_PATH + '/rules/da-pixel.yml')
 
-        if not flag_vars['ACCESSION']:
-            # --- move files into pid folder
-            if bool(pid_dict):
-                find_pid_modality.convert_acc_to_pid_folders(pid_dict, ANON_ROOT_PATH)
+            # post_process.anonymize_all(scrub_dict, rules)
+            post_process.anonymize(ANON_ROOT_PATH + '/mirc/anon', rules)
     except:
-        pass
+        print('POST PROCESS ERROR. Secondary scrub not performed.')
+
+    if not flag_vars['ACCESSION']:
+
+        # --- move files into pid folder
+        if bool(pid_dict):
+            find_pid_modality.convert_acc_to_pid_folders(pid_dict, ANON_ROOT_PATH)
 
 # --- anonymize dicom files using rules based on flags
 if not flag_vars['RAW']:
 
     # --- use custom smaller set of rules for a lighter scrub
-    if flag_vars['LIGHT']:
-        anonymize_dicoms.anonymize(ANON_ROOT_PATH + '/mirc/anon', ANON_ROOT_PATH + '/rules/light_rules.csv', remove_non_standard=False)
+    if flag_vars['CUSTOM']:
+
+        if flag_vars['PRIVONLY']:
+            
+            if flag_vars['SHIFT']:
+                shifted_dates_dict = anonymize_dicoms.anonymize(ANON_ROOT_PATH + '/mirc/anon', ANON_ROOT_PATH + '/rules/custom_rules.csv', remove_non_standard=False, shift=True)
+            else:
+                anonymize_dicoms.anonymize(ANON_ROOT_PATH + '/mirc/anon', ANON_ROOT_PATH + '/rules/custom_rules.csv', remove_non_standard=False, shift=False)
+
+        elif flag_vars['SHIFT']:
+            shifted_dates_dict = anonymize_dicoms.anonymize(ANON_ROOT_PATH + '/mirc/anon', ANON_ROOT_PATH + '/rules/custom_rules.csv', remove_non_standard=True, shift=True)
+        else:
+            anonymize_dicoms.anonymize(ANON_ROOT_PATH + '/mirc/anon', ANON_ROOT_PATH + '/rules/custom_rules.csv', remove_non_standard=True, shift=False)
 
     # --- remove only private tags
     elif flag_vars['PRIVONLY']:
+        print('Keep private tags mode.')
+        if flag_vars['SHIFT']:
+            shifted_dates_dict = anonymize_dicoms.anonymize(ANON_ROOT_PATH + '/mirc/anon', ANON_ROOT_PATH + '/rules/standard_rules.csv', remove_non_standard=False, shift=True)
 
-        print('Private tag only removal mode.')
-        anonymize_dicoms.anonymize_private_tags_only(ANON_ROOT_PATH + '/mirc/anon')
+        else:
+            anonymize_dicoms.anonymize(ANON_ROOT_PATH + '/mirc/anon', ANON_ROOT_PATH + '/rules/standard_rules.csv', remove_non_standard=False, shift=False)
+
     else:
 
         # --- determine if date shift functionality will be used

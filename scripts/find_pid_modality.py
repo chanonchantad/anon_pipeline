@@ -61,6 +61,7 @@ def get_query_matches_csv(date, requestor, request_path):
 def create_acc_to_pid_dict(query_path, matches_path):
    
     if os.path.exists(query_path) and os.path.exists(matches_path):
+            
         # --- load both files with pandas
         df_query = pd.read_csv(query_path, dtype={'MRN' : int})
         df_matches = pd.read_csv(matches_path, dtype={'mrn' : int})
@@ -79,9 +80,7 @@ def create_acc_to_pid_dict(query_path, matches_path):
         acc_to_pid = {k1:mrn_to_pid[v1] for (k1,v1) in acc_to_mrn.items()}
 
         return acc_to_pid
-
     else:
-
         return {}
 
 def create_2nd_scrub_acc_dict(matches_path, anon_root):

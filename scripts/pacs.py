@@ -109,6 +109,7 @@ def perform_find(configs, query={}, verbose=[], max_results=20, csv_file=None, r
         results['studyUID'] = []
 
     # --- Configure query object 
+    # --- use 'study' instead of gdcm.ePatientRootType
     cnf = gdcm.CompositeNetworkFunctions()
     theQuery = cnf.ConstructQuery(gdcm.ePatientRootType, gdcm.eStudy, ds)
 
@@ -182,8 +183,8 @@ def perform_move(configs, query={}, verbose=False):
 
     # --- Perform move
     if verbose: print('Performing C-MOVE...')
-    cnf.CMove(configs['ip'], configs['port_called'], theQuery, configs['port_calling'],\
-        configs['aet_calling'], configs['aet_called'], configs['destination'])
+    result = cnf.CMove(configs['ip'], configs['port_called'], theQuery, configs['port_calling'],\
+            configs['aet_calling'], configs['aet_called'], configs['destination'])
     if verbose: print('Operation complete')
 
 # =========================================================================

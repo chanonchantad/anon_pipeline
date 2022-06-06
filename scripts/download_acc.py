@@ -57,6 +57,6 @@ if __name__ == '__main__':
             raise ValueError("Invalid folder path. Doesn't exist.")
         else:
             root = os.path.normpath(folder_path)
-            main(root=root, configs=CONFIGS)
+            main(root=root)
     else:
         raise ValueError("Usage: python download_acc.py <suffix of csv query file> <path_to_folder \"/<date>/name/\" that contains query_<date>.csv")

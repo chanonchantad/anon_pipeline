@@ -109,6 +109,14 @@ def anonymize_dicom(dicom, salt, remove_tag_set, shift_tag_set, hashuid_tag_set,
     # --- extract patientid to use for shifting dates
     pid = dicom.PatientID
     
+    # --- custom
+    #if 'InstitutionalDepartmentName' in dicom:
+    #    del dicom.InstitutionalDepartmentName
+    #if 'RequestAttributesSequence' in dicom:
+    #    del dicom.RequestAttributesSequence
+    #if 'ReferencedImageSequence' in dicom:
+    #    del dicom.ReferencedImageSequence
+
     # --- iterrate through dicom and remove tags
     for tag in dicom:
 

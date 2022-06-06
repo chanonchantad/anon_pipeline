@@ -11,7 +11,7 @@ from pydicom.tag import Tag
 
 # --- fields that contain lists
 list_fields = ['ImageType']
-
+modalities_to_scrub = set(['NM', 'PET', 'US', 'OT'])
 # --------------------------------------------------
 #  main function
 # --------------------------------------------------
@@ -57,7 +57,10 @@ def anonymize_dcm(dcm_path, rules):
     
     # --- load stratified rules by modality and combine it with general rules
     dcm_modality = dcm['Modality'].value
-    dcm_image_type = dcm['ImageType'].value
+    if 'ImageType' in dcm:
+        dcm_image_type = dcm['ImageType'].value
+    else:
+        dcm_image_type = ''
 
 #    if 'SECONDARY' in str(dcm_image_type):
     if 'SECONDARY' in str(dcm_image_type) or 'DERIVED' in str(dcm_image_type):
@@ -88,9 +91,10 @@ def anonymize_dcm(dcm_path, rules):
                 # --- remove specific pixels
                 dcm_array.setflags(write=1)
                 
-                if pydicom.pixel_data_handlers.numpy_handler.should_change_PhotometricInterpretation_to_RGB(dcm_array):
-                    dcm_array = pydicom.pixel_data_handlers.util.convert_color_space(dcm_array, 'YBR_FULL', 'RGB')
-                    dcm.PhotometricInterpretation = 'RGB'
+                if dcm_modality == 'US':
+                    if pydicom.pixel_data_handlers.numpy_handler.should_change_PhotometricInterpretation_to_RGB(dcm_array):
+                        dcm_array = pydicom.pixel_data_handlers.util.convert_color_space(dcm_array, 'YBR_FULL', 'RGB')
+                        dcm.PhotometricInterpretation = 'RGB'
 
                 if len(dcm_array.shape) == 4:
                     
